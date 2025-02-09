@@ -28,24 +28,49 @@ const scrapeItemsAndExtractImgUrls = async (url) => {
     }
     const $ = cheerio.load(yad2Html);
     
+    // הדפסת התוכן של הדף לבדיקה
+    console.log("HTML Content:", yad2Html);
+    
     if (yad2Html.includes("מצאתי רכב קטן בייד2")) {
         throw new Error("Yad2 blocked access");
     }
 
-    const $feedItems = $("[data-test-id='feed_item']");
-    if (!$feedItems.length) {
-        console.log("No feed items found");
+    // ננסה סלקטורים שונים
+    const itemSelectors = [
+        '.feed_item',
+        '[id^="feed_item_"]',
+        '.main_card',
+        '.vehicle_block',
+        '.vehicles_forsale',
+        '.vehicle_listing'
+    ];
+
+    let $feedItems = null;
+    for (const selector of itemSelectors) {
+        $feedItems = $(selector);
+        if ($feedItems.length) {
+            console.log(`Found items using selector: ${selector}`);
+            break;
+        }
+    }
+
+    if (!$feedItems || !$feedItems.length) {
+        console.log("Available classes:", $('*').map((_, el) => $(el).attr('class')).get().join(', '));
         throw new Error("Could not find feed items");
     }
 
     const imageUrls = [];
     $feedItems.each((_, elm) => {
-        const imgSrc = $(elm).find("[data-test-id='image_thumb']").attr('src');
-        if (imgSrc) {
-            imageUrls.push(imgSrc);
+        const $img = $(elm).find('img');
+        if ($img.length) {
+            const imgSrc = $img.attr('src');
+            if (imgSrc) {
+                imageUrls.push(imgSrc);
+            }
         }
     });
     
+    console.log("Found images:", imageUrls.length);
     return imageUrls;
 }
 
