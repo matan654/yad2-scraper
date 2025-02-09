@@ -1,12 +1,10 @@
 name: Yad2 Scraper
-
 on:
   schedule:
     - cron: '*/15 5-17 * * *'
   workflow_dispatch:
     branches:
       - '**'
-
 jobs:
   scraper:
     runs-on: ubuntu-latest
@@ -15,21 +13,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
+      
+      - name: Install chrome dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          
       - name: Install packages
         run: yarn install
-
+        
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions"
           git config user.email "${{ secrets.GIT_CONFIG_EMAIL }}"
-
+          
       - name: Run scraper
         run: |
           export API_TOKEN=${{ secrets.API_TOKEN }}
           export CHAT_ID=${{ secrets.CHAT_ID }}
+          export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+          export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
           yarn scrape
-
+          
       - name: Push new json data if needed
         run: |
           if [ -f ./push_me ]; then

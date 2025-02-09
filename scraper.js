@@ -2,35 +2,34 @@ const cheerio = require('cheerio');
 const Telenode = require('telenode-js');
 const fs = require('fs');
 const config = require('./config.json');
+const puppeteer = require('puppeteer');
 
 const getYad2Response = async (url) => {
-    const requestOptions = {
-        method: 'GET',
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
-            'Referer': 'https://www.yad2.co.il/',
-            'Cookie': 'y2018-2-cohort=70; abTestKey=42; y2_cohort_2020=31; favorites_userid=hgi941668629796944; __gads=ID=28e49f3721f4b08b:T=1668629797:S=ALNI_MaI0jZ2CppvX9ROZOUiN_dHbKT0Jw; __gpi=UID=00000b7a5326d5c0:T=1668629797:RT=1668629797:S=ALNI_MbyFmFejLNu4LGSpsMj6M-B8bfuSg; fitracking_12=no; previewVersion=new; server_env=production; __unam=57d8850-1858ecc80b9-68b59c1b-5; UTGv2=h4fd432d81456ad174a7c1672ecadb1b348; styleVersion=new; y2_cohort_59=66; canary=never; saved_searches=null; ads=true; adOtr=Tb73b5b1AV'
-        },
-        redirect: 'follow'
-    };
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
     try {
-        const res = await fetch(url, requestOptions);
-        return await res.text();
-    } catch (err) {
-        console.log(err);
-        return null;
+        const page = await browser.newPage();
+        
+        // הגדרת User Agent
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36');
+        
+        // הגדרת לוקיישן עברית
+        await page.setExtraHTTPHeaders({
+            'Accept-Language': 'he-IL,he;q=0.9'
+        });
+        
+        await page.goto(url, {waitUntil: 'networkidle0'});
+        
+        // המתנה לטעינת התוכן
+        await page.waitForSelector('.feed_item', {timeout: 10000}).catch(() => {});
+        
+        const content = await page.content();
+        return content;
+    } finally {
+        await browser.close();
     }
 }
 
