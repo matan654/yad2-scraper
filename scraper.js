@@ -22,13 +22,18 @@ const scrapeItemsAndExtractImgUrls = async (url) => {
         throw new Error("Could not get Yad2 response");
     }
     const $ = cheerio.load(yad2Html);
-    const title = $("title")
-    const titleText = title.first().text();
-    if (titleText === "ShieldSquare Captcha") {
-        throw new Error("Bot detection");
+    
+    // הדפס את התוכן של העמוד לבדיקה
+    console.log("Page content:", yad2Html.substring(0, 500));
+    
+    // בדוק אם יש הודעת שגיאה של יד2
+    if (yad2Html.includes("מצאתי רכב קטן בייד2")) {
+        throw new Error("Yad2 blocked access");
     }
+
     const $feedItems = $(".feeditem").find(".pic");
-    if (!$feedItems) {
+    if (!$feedItems.length) {  // שינוי כאן - בדיקה של length
+        console.log("No feed items found");
         throw new Error("Could not find feed items");
     }
     const imageUrls = []
@@ -105,15 +110,13 @@ const scrape = async (topic, url) => {
     }
 }
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const program = async () => {
-    await Promise.all(config.projects.filter(project => {
-        if (project.disabled) {
-            console.log(`Topic "${project.topic}" is disabled. Skipping.`);
-        }
-        return !project.disabled;
-    }).map(async project => {
-        await scrape(project.topic, project.url)
-    }))
+    for (const project of config.projects.filter(p => !p.disabled)) {
+        await scrape(project.topic, project.url);
+        await delay(5000); // השהייה של 5 שניות בין בקשות
+    }
 };
 
 program();
