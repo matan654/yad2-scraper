@@ -3,8 +3,8 @@
     {
       "topic": "חיפוש רכב",
       "url": "https://www.yad2.co.il/vehicles/cars?carFamilyType=2&price=10000-46000&km=-1-130000&gearBox=102&ownerID=1&Order=1&page=7"
-    }
-	    {
+    },
+    {
       "topic": "mini",
       "url": "https://www.yad2.co.il/vehicles/cars?carFamilyType=1&manufacturer=48,21&price=10000-46000&km=-1-130000&gearBox=102&ownerID=1&Order=1"
     }
